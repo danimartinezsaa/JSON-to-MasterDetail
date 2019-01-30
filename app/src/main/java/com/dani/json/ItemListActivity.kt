@@ -57,7 +57,7 @@ class ItemListActivity : AppCompatActivity() {
             // activity should be in two-pane mode.
             twoPane = true
         }
-        progressBar.visibility=VISIBLE
+
         setupRecyclerView(item_list)
 
     }
