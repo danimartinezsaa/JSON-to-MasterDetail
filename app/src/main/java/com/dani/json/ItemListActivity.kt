@@ -11,6 +11,7 @@ import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.TextView
+import com.dani.json.Articulos.lista
 
 import kotlinx.android.synthetic.main.activity_item_list.*
 import kotlinx.android.synthetic.main.item_list_content.view.*
@@ -21,6 +22,7 @@ import org.jetbrains.anko.uiThread
 import java.net.URL
 import org.json.*
 import java.util.ArrayList
+import kotlin.coroutines.coroutineContext
 
 
 /**
@@ -39,7 +41,7 @@ class ItemListActivity : AppCompatActivity() {
      */
     private var twoPane: Boolean = false
 
-    val lista: MutableList<Datos> = ArrayList()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,26 +58,28 @@ class ItemListActivity : AppCompatActivity() {
             twoPane = true
         }
         progressBar.visibility=VISIBLE
-        peticionwp()
+        setupRecyclerView(item_list)
 
     }
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, lista, twoPane)
+        recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, Articulos.lista, twoPane)
     }
 
     class SimpleItemRecyclerViewAdapter(
         private val parentActivity: ItemListActivity,
-        private val values: List<Datos>,
+        private val values: List<Articulos.Articulo>,
         private val twoPane: Boolean
     ) :
         RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
         private val onClickListener: View.OnClickListener
 
+
         init {
+
             onClickListener = View.OnClickListener { v ->
-                val item = v.tag as Datos
+                val item = v.tag as Articulos.Articulo
                 if (twoPane) {
                     val fragment = ItemDetailFragment().apply {
                         arguments = Bundle().apply {
@@ -121,31 +125,5 @@ class ItemListActivity : AppCompatActivity() {
         }
     }
 
-    fun peticionwp() {
-        var respuesta = ""
-        // lanza la corutina NO en el hilo principal
-        doAsync {
-            // peticion a wordpress
-            respuesta = URL("http://18.191.161.6/wp5/?rest_route=/wp/v2/posts").readText()
-            // Accedemos al hilo principal
-            uiThread {
-                if (respuesta!=null){
-                    longToast("Request performed")
-
-                    var jsonArray = JSONArray(respuesta)
-                    for (jsonIndex in 0..(jsonArray.length() - 1)) {
-                        var titulo=jsonArray.getJSONObject(jsonIndex).getJSONObject("title").getString("rendered")
-                        Log.d("wordpress",titulo)
-                        var descripcion=jsonArray.getJSONObject(jsonIndex).getJSONObject("content").getString("rendered")
-                        Log.d("wordpress",descripcion)
-                        var dato= Datos(titulo,descripcion)
-                        lista.add(jsonIndex,dato)
-                    }
-                    progressBar.visibility=INVISIBLE
-                    setupRecyclerView(item_list)
-                }
-            }
-        }
-    }
 
 }
