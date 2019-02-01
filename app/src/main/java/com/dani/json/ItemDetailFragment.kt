@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.item_detail.view.*
-import kotlinx.android.synthetic.main.item_list_content.view.*
 
 /**
  * A fragment representing a single Item detail screen.

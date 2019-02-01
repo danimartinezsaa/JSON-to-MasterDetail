@@ -11,18 +11,15 @@ import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.TextView
-import com.dani.json.Articulos.lista
-
 import kotlinx.android.synthetic.main.activity_item_list.*
 import kotlinx.android.synthetic.main.item_list_content.view.*
 import kotlinx.android.synthetic.main.item_list.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.uiThread
+import org.json.JSONArray
+import java.lang.Exception
 import java.net.URL
-import org.json.*
-import java.util.ArrayList
-import kotlin.coroutines.coroutineContext
 
 
 /**
@@ -57,8 +54,9 @@ class ItemListActivity : AppCompatActivity() {
             // activity should be in two-pane mode.
             twoPane = true
         }
+        progressBar.visibility=VISIBLE
+        peticionwp()
 
-        setupRecyclerView(item_list)
 
     }
 
@@ -122,6 +120,39 @@ class ItemListActivity : AppCompatActivity() {
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val idView: TextView = view.id_text
             val contentView: TextView = view.content
+        }
+    }
+
+    fun peticionwp() {
+        var respuesta = ""
+        Articulos.lista.clear()
+        // lanza la corrutina NO en el hilo principal
+        doAsync {
+            // peticion a wordpress
+            respuesta = URL("http://3.17.66.187/wp5/?rest_route=/wp/v2/posts").readText()
+            // Accedemos al hilo principal
+            uiThread {
+                if (respuesta!=null){
+                    longToast("Request performed")
+                    try {
+                        var jsonArray = JSONArray(respuesta)
+                        for (jsonIndex in 0..(jsonArray.length() - 1)) {
+                            var titulo = jsonArray.getJSONObject(jsonIndex).getJSONObject("title").getString("rendered")
+                            Log.d("wordpress", titulo)
+                            var descripcion =
+                                jsonArray.getJSONObject(jsonIndex).getJSONObject("content").getString("rendered")
+                            Log.d("wordpress", descripcion)
+                            var dato = Articulos.Articulo(titulo, descripcion)
+                            Articulos.lista.add(dato)
+                        }
+                    }catch (e: Exception){
+                        toast("Connection TimeOut")
+                    }finally {
+                        progressBar.visibility=INVISIBLE
+                        setupRecyclerView(item_list)
+                    }
+                }
+            }
         }
     }
 
